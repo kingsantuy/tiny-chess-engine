@@ -6,16 +6,16 @@ N8=(-33,-31,-18,-14,14,18,31,33)
 B8=(15,17,-15,-17)
 R8=(1,-1,16,-16)
 K8=R8+B8
-MV=(0,0,(N8,0),(B8,1),(R8,1),(B8+R8,1),(K8,0))
+MV=(0,0,(N8,0),(B8,1),(R8,1),(K8,1),(K8,0))
 H='abcdefgh'
 KM={0:13,7:14,4:12,112:7,119:11,116:3}
 B=[0]*128
-E=0;s=1;ep=-1;rg=0;K=[4,116];N=0
+E=0;s=1;ep=-1;rg=0;K=[4,116];N=0;W=999999
 def P(t,q):
  f=q&7;r=q>>4;c=6-((abs(2*f-7)+abs(2*r-7))//2)
  return (6*r-6+2*c,8*c,6*c,2*c+15*(r==6),3*c,10-20*r)[t-1]
 def C(p,q):
- return (V[abs(p)]+P(abs(p),q if p>0 else q^112))*(1 if p>0 else-1)
+ return (V[abs(p)]+P(abs(p),q^112*(p<0)))*(1,-1)[p<0]
 def su(f):
  global B,E,s,ep,rg,K
  B=[0]*128;E=0
@@ -86,7 +86,7 @@ def mk(m):
  E-=C(p,f)
  if cp:E-=C(cp,cs)
  B[f]=0
- n=z*p//abs(p) if z else p
+ n=z*p if z else p
  B[t]=n
  E+=C(n,t)
  if v==6:
@@ -137,17 +137,18 @@ def S(d,a,b):
    a=max(a,v)
    if a>=b:un(u);return b
   un(u)
- if n==0:return -100000 if d>0 and ak(K[s<0],-s) or d<=0 and ck else(0 if d>0 else a)
+ if n==0:return -100000-d if d>0 and ak(K[s<0],-s) or d<=0 and ck else(0 if d>0 else a)
  return a
 def root(L):
  global N
  bs=L[0]
- for d in(1,2,3):
+ for d in(1,2,3,4):
   try:
-   N=0;bv=-999999;bm=bs
+   N=0;bv=-W;bm=bs
    for m in L:
     u=mk(m)
-    v=-S(d-1,-999999,999999)
+    v=-S(d-1,-bv-1,-bv)
+    if v>bv:v=-S(d-1,-W,W)
     un(u)
     if v>bv:bv,bm=v,m
    bs=bm;L.remove(bm);L.insert(0,bm)
